@@ -58,62 +58,14 @@ void main() {
   });
 
   group('OrderScreen - Controls', () {
-    testWidgets('Switch toggles between six-inch and footlong', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(home: OrderScreen(maxQuantity: 5)));
-      await tester.pumpAndSettle();
-
-      final switchFinder = find.byKey(const Key('size_switch'));
-      expect(switchFinder, findsOneWidget);
-
-      // Initial switch value should be true (footlong)
-      Switch sw = tester.widget<Switch>(switchFinder);
-      expect(sw.value, isTrue);
-
-      // Verify the summary text contains 'footlong sandwich' initially
-      final footlongSummary = find.byWidgetPredicate((widget) {
-        return widget is Text && (widget.data ?? '').contains('footlong sandwich');
-      });
-      expect(footlongSummary, findsOneWidget);
-
-      // Tap the switch to toggle it to six-inch
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
-
-      // The Switch widget's value should now be false
-      sw = tester.widget<Switch>(switchFinder);
-      expect(sw.value, isFalse);
-
-      // And the summary should update to show 'six-inch sandwich'
-      final sixInchSummary = find.byWidgetPredicate((widget) {
-        return widget is Text && (widget.data ?? '').contains('six-inch sandwich');
-      });
-      expect(sixInchSummary, findsOneWidget);
+    testWidgets('toggles sandwich type with Switch',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+      expect(find.textContaining('footlong sandwich'), findsOneWidget);
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      expect(find.textContaining('six-inch sandwich'), findsOneWidget);
     });
-
-    testWidgets('Toasted switch toggles between untoasted and toasted', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(home: OrderScreen(maxQuantity: 5)));
-      await tester.pumpAndSettle();
-
-      final toastedFinder = find.byKey(const Key('toasted_switch'));
-      expect(toastedFinder, findsOneWidget);
-
-      // Initial value should be false (untoasted)
-      Switch sw = tester.widget<Switch>(toastedFinder);
-      expect(sw.value, isFalse);
-
-      // Tap the toasted switch
-      await tester.tap(toastedFinder);
-      await tester.pumpAndSettle();
-
-      // Now it should be true (toasted)
-      sw = tester.widget<Switch>(toastedFinder);
-      expect(sw.value, isTrue);
-
-      // Labels are present
-      expect(find.text('untoasted'), findsOneWidget);
-      expect(find.text('toasted'), findsOneWidget);
-    });
-
     testWidgets('changes bread type with DropdownMenu',
         (WidgetTester tester) async {
       await tester.pumpWidget(const App());
