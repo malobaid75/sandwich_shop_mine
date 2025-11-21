@@ -62,7 +62,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: OrderScreen(maxQuantity: 5)));
       await tester.pumpAndSettle();
 
-      final switchFinder = find.byType(Switch);
+      final switchFinder = find.byKey(const Key('size_switch'));
       expect(switchFinder, findsOneWidget);
 
       // Initial switch value should be true (footlong)
@@ -88,6 +88,30 @@ void main() {
         return widget is Text && (widget.data ?? '').contains('six-inch sandwich');
       });
       expect(sixInchSummary, findsOneWidget);
+    });
+
+    testWidgets('Toasted switch toggles between untoasted and toasted', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(home: OrderScreen(maxQuantity: 5)));
+      await tester.pumpAndSettle();
+
+      final toastedFinder = find.byKey(const Key('toasted_switch'));
+      expect(toastedFinder, findsOneWidget);
+
+      // Initial value should be false (untoasted)
+      Switch sw = tester.widget<Switch>(toastedFinder);
+      expect(sw.value, isFalse);
+
+      // Tap the toasted switch
+      await tester.tap(toastedFinder);
+      await tester.pumpAndSettle();
+
+      // Now it should be true (toasted)
+      sw = tester.widget<Switch>(toastedFinder);
+      expect(sw.value, isTrue);
+
+      // Labels are present
+      expect(find.text('untoasted'), findsOneWidget);
+      expect(find.text('toasted'), findsOneWidget);
     });
 
     testWidgets('changes bread type with DropdownMenu',
