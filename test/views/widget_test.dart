@@ -58,6 +58,38 @@ void main() {
   });
 
   group('OrderScreen - Controls', () {
+    testWidgets('Switch toggles between six-inch and footlong', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(home: OrderScreen(maxQuantity: 5)));
+      await tester.pumpAndSettle();
+
+      final switchFinder = find.byType(Switch);
+      expect(switchFinder, findsOneWidget);
+
+      // Initial switch value should be true (footlong)
+      Switch sw = tester.widget<Switch>(switchFinder);
+      expect(sw.value, isTrue);
+
+      // Verify the summary text contains 'footlong sandwich' initially
+      final footlongSummary = find.byWidgetPredicate((widget) {
+        return widget is Text && (widget.data ?? '').contains('footlong sandwich');
+      });
+      expect(footlongSummary, findsOneWidget);
+
+      // Tap the switch to toggle it to six-inch
+      await tester.tap(switchFinder);
+      await tester.pumpAndSettle();
+
+      // The Switch widget's value should now be false
+      sw = tester.widget<Switch>(switchFinder);
+      expect(sw.value, isFalse);
+
+      // And the summary should update to show 'six-inch sandwich'
+      final sixInchSummary = find.byWidgetPredicate((widget) {
+        return widget is Text && (widget.data ?? '').contains('six-inch sandwich');
+      });
+      expect(sixInchSummary, findsOneWidget);
+    });
+
     testWidgets('changes bread type with DropdownMenu',
         (WidgetTester tester) async {
       await tester.pumpWidget(const App());
