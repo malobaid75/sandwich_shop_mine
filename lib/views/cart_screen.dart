@@ -67,8 +67,35 @@ class _CartScreenState extends State<CartScreen> {
                       '${_getSizeText(entry.key.isFootlong)} on ${entry.key.breadType.name} bread',
                       style: normalText,
                     ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          key: ValueKey('cart_decrement_${entry.key.name}_${entry.key.isFootlong}_${entry.key.breadType.name}'),
+                          onPressed: () {
+                            setState(() {
+                              widget.cart.remove(entry.key, quantity: 1);
+                            });
+                          },
+                          icon: const Icon(Icons.remove_circle_outline),
+                        ),
+                        Text(
+                          'Qty: ${entry.value}',
+                          style: normalText,
+                        ),
+                        IconButton(
+                          key: ValueKey('cart_increment_${entry.key.name}_${entry.key.isFootlong}_${entry.key.breadType.name}'),
+                          onPressed: () {
+                            setState(() {
+                              widget.cart.add(entry.key, quantity: 1);
+                            });
+                          },
+                          icon: const Icon(Icons.add_circle_outline),
+                        ),
+                      ],
+                    ),
                     Text(
-                      'Qty: ${entry.value} - £${_getItemPrice(entry.key, entry.value).toStringAsFixed(2)}',
+                      '- £${_getItemPrice(entry.key, entry.value).toStringAsFixed(2)}',
                       style: normalText,
                     ),
                     const SizedBox(height: 20),
