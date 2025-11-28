@@ -258,6 +258,15 @@ class _OrderScreenState extends State<OrderScreen> {
                     style: normalText,
                   ),
                 ),
+              const SizedBox(height: 12),
+              // Permanent cart summary
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'Cart: ${_cart.totalQuantity} item(s) — Total: ${_cart.formattedTotal()}',
+                  style: normalText,
+                ),
+              ),
               const SizedBox(height: 20),
             ],
           ),

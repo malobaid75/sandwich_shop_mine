@@ -90,6 +90,26 @@ void main() {
       await tester.pump();
       expect(find.text('Note: Extra mayo'), findsOneWidget);
     });
+
+    testWidgets('cart summary updates when items are added', (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+
+      // initial summary should show zero items and zero total
+      expect(find.text('Cart: 0 item(s) — Total: £0.00'), findsOneWidget);
+
+      // make sure the Add to Cart button is visible then tap it
+      await tester.scrollUntilVisible(
+        find.text('Add to Cart'),
+        50.0,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to Cart'));
+      await tester.pumpAndSettle();
+
+      // After adding the default selection (footlong by default) the total
+      // should reflect one footlong sandwich (£11.00)
+      expect(find.text('Cart: 1 item(s) — Total: £11.00'), findsOneWidget);
+    });
   });
 
   group('StyledButton', () {
