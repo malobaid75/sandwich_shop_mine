@@ -231,6 +231,12 @@ class _OrderScreenState extends State<OrderScreen> {
                 style: normalText,
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 12),
+              TextButton(
+                key: const ValueKey('profile_link'),
+                onPressed: () => Navigator.pushNamed(context, '/profile'),
+                child: const Text('Profile / Sign in'),
+              ),
               const SizedBox(height: 20),
             ],
           ),
