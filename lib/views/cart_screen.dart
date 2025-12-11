@@ -18,48 +18,44 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  void _goBack() {
-    Navigator.pop(context);
-  }
-  
   Future<void> _navigateToCheckout() async {
-  if (widget.cart.items.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Your cart is empty'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-    return;
-  }
+    if (widget.cart.items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your cart is empty'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
 
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => CheckoutScreen(cart: widget.cart),
-    ),
-  );
-
-  if (result != null && mounted) {
-    setState(() {
-      widget.cart.clear();
-    });
-
-    final String orderId = result['orderId'] as String;
-    final String estimatedTime = result['estimatedTime'] as String;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            Text('Order $orderId confirmed! Estimated time: $estimatedTime'),
-        duration: const Duration(seconds: 4),
-        backgroundColor: Colors.green,
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckoutScreen(cart: widget.cart),
       ),
     );
 
-    Navigator.pop(context);
+    if (result != null && mounted) {
+      setState(() {
+        widget.cart.clear();
+      });
+
+      final String orderId = result['orderId'] as String;
+      final String estimatedTime = result['estimatedTime'] as String;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Order $orderId confirmed! Estimated time: $estimatedTime'),
+          duration: const Duration(seconds: 4),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context);
+    }
   }
-}
 
   String _getSizeText(bool isFootlong) {
     if (isFootlong) {
@@ -74,6 +70,40 @@ class _CartScreenState extends State<CartScreen> {
     return pricingRepository.calculatePrice(
       quantity: quantity,
       isFootlong: sandwich.isFootlong,
+    );
+  }
+
+  void _incrementQuantity(Sandwich sandwich) {
+    setState(() {
+      widget.cart.add(sandwich, quantity: 1);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Quantity increased')),
+    );
+  }
+
+  void _decrementQuantity(Sandwich sandwich) {
+    final wasPresent = widget.cart.items.containsKey(sandwich);
+    setState(() {
+      widget.cart.remove(sandwich, quantity: 1);
+    });
+    if (!widget.cart.items.containsKey(sandwich) && wasPresent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Item removed from cart')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quantity decreased')),
+      );
+    }
+  }
+
+  void _removeItem(Sandwich sandwich) {
+    setState(() {
+      widget.cart.remove(sandwich, quantity: widget.cart.getQuantity(sandwich));
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Item removed from cart')),
     );
   }
 
@@ -99,48 +129,51 @@ class _CartScreenState extends State<CartScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
-              for (MapEntry<Sandwich, int> entry in widget.cart.items.entries)
-                Column(
-                  children: [
-                    Text(entry.key.name, style: heading2),
-                    Text(
-                      '${_getSizeText(entry.key.isFootlong)} on ${entry.key.breadType.name} bread',
-                      style: normalText,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          key: ValueKey('cart_decrement_${entry.key.name}_${entry.key.isFootlong}_${entry.key.breadType.name}'),
-                          onPressed: () {
-                            setState(() {
-                              widget.cart.remove(entry.key, quantity: 1);
-                            });
-                          },
-                          icon: const Icon(Icons.remove_circle_outline),
-                        ),
-                        Text(
-                          'Qty: ${entry.value}',
-                          style: normalText,
-                        ),
-                        IconButton(
-                          key: ValueKey('cart_increment_${entry.key.name}_${entry.key.isFootlong}_${entry.key.breadType.name}'),
-                          onPressed: () {
-                            setState(() {
-                              widget.cart.add(entry.key, quantity: 1);
-                            });
-                          },
-                          icon: const Icon(Icons.add_circle_outline),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '- £${_getItemPrice(entry.key, entry.value).toStringAsFixed(2)}',
-                      style: normalText,
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+              if (widget.cart.items.isEmpty)
+                const Text(
+                  'Your cart is empty.',
+                  style: heading2,
+                  textAlign: TextAlign.center,
+                )
+              else
+                for (MapEntry<Sandwich, int> entry in widget.cart.items.entries)
+                  Column(
+                    children: [
+                      Text(entry.key.name, style: heading2),
+                      Text(
+                        '${_getSizeText(entry.key.isFootlong)} on ${entry.key.breadType.name} bread',
+                        style: normalText,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+                            onPressed: () => _decrementQuantity(entry.key),
+                          ),
+                          Text(
+                            'Qty: ${entry.value}',
+                            style: normalText,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: () => _incrementQuantity(entry.key),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            '£${_getItemPrice(entry.key, entry.value).toStringAsFixed(2)}',
+                            style: normalText,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            tooltip: 'Remove item',
+                            onPressed: () => _removeItem(entry.key),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
               Text(
                 'Total: £${widget.cart.totalPrice.toStringAsFixed(2)}',
                 style: heading2,
@@ -163,9 +196,8 @@ class _CartScreenState extends State<CartScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              const SizedBox(height: 20),
               StyledButton(
-                onPressed: _goBack,
+                onPressed: () => Navigator.pop(context),
                 icon: Icons.arrow_back,
                 label: 'Back to Order',
                 backgroundColor: Colors.grey,

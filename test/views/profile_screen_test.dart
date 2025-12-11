@@ -1,75 +1,325 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sandwich_shop/main.dart';
+import 'package:sandwich_shop/views/profile_screen.dart';
 
 void main() {
   group('ProfileScreen', () {
-    testWidgets('navigates from OrderScreen and saves valid profile', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(const App());
+    testWidgets('displays initial UI elements correctly',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
 
-      // Tap the profile link (may be off-screen so scroll until visible)
-      final profileLink = find.byKey(const ValueKey('profile_link'));
-      expect(profileLink, findsOneWidget);
-      await tester.ensureVisible(profileLink);
-      await tester.pumpAndSettle();
-      await tester.tap(profileLink);
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(app);
 
-      // Ensure profile fields are present
-      expect(find.byKey(const ValueKey('profile_name')), findsOneWidget);
-      expect(find.byKey(const ValueKey('profile_email')), findsOneWidget);
-
-      // Enter valid data
-      await tester.enterText(
-        find.byKey(const ValueKey('profile_name')),
-        'Alice',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('profile_email')),
-        'alice@example.com',
-      );
-      await tester.pumpAndSettle();
-
-      // Tap save
-      await tester.tap(find.byKey(const ValueKey('profile_save')));
-      await tester.pump();
-
-      // SnackBar should appear with exact text
-      expect(
-        find.text('Saved profile: Alice — alice@example.com'),
-        findsOneWidget,
-      );
+      expect(find.text('Profile'), findsOneWidget);
+      expect(find.text('Enter your details:'), findsOneWidget);
+      expect(find.text('Your Name'), findsOneWidget);
+      expect(find.text('Preferred Location'), findsOneWidget);
+      expect(find.text('Save Profile'), findsOneWidget);
+      expect(find.byType(TextField), findsNWidgets(2));
+      expect(find.byType(ElevatedButton), findsOneWidget);
     });
 
-    testWidgets('shows validation error for invalid email and does not save', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(const App());
+    testWidgets('has proper layout structure', (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
 
-      // Navigate to profile (scroll if necessary)
-      final profileLink2 = find.byKey(const ValueKey('profile_link'));
-      await tester.ensureVisible(profileLink2);
-      await tester.pumpAndSettle();
-      await tester.tap(profileLink2);
+      await tester.pumpWidget(app);
+
+      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(find.byType(Column), findsOneWidget);
+      expect(find.byType(SizedBox), findsWidgets);
+    });
+
+    testWidgets('text fields accept input correctly',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder nameFieldFinder =
+          find.widgetWithText(TextField, 'Your Name');
+      final Finder locationFieldFinder =
+          find.widgetWithText(TextField, 'Preferred Location');
+
+      await tester.enterText(nameFieldFinder, 'John Doe');
+      await tester.enterText(locationFieldFinder, 'London');
+      await tester.pump();
+
+      expect(find.text('John Doe'), findsOneWidget);
+      expect(find.text('London'), findsOneWidget);
+    });
+
+    testWidgets('shows validation error when name field is empty',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder locationFieldFinder =
+          find.widgetWithText(TextField, 'Preferred Location');
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.enterText(locationFieldFinder, 'London');
+      await tester.tap(saveButtonFinder);
       await tester.pumpAndSettle();
 
-      // Enter name and invalid email
-      await tester.enterText(find.byKey(const ValueKey('profile_name')), 'Bob');
-      await tester.enterText(
-        find.byKey(const ValueKey('profile_email')),
-        'not-an-email',
+      expect(find.text('Please fill in all fields'), findsOneWidget);
+    });
+
+    testWidgets('shows validation error when location field is empty',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder nameFieldFinder =
+          find.widgetWithText(TextField, 'Your Name');
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.enterText(nameFieldFinder, 'John Doe');
+      await tester.tap(saveButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please fill in all fields'), findsOneWidget);
+    });
+
+    testWidgets('shows validation error when both fields are empty',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.tap(saveButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please fill in all fields'), findsOneWidget);
+    });
+
+    testWidgets('trims whitespace from input fields',
+        (WidgetTester tester) async {
+      Map<String, String>? result;
+      const ProfileScreen profileScreen = ProfileScreen();
+      final MaterialApp app = MaterialApp(
+        home: Builder(
+          builder: (BuildContext context) {
+            return Scaffold(
+              body: ElevatedButton(
+                onPressed: () async {
+                  result = await Navigator.push<Map<String, String>>(
+                    context,
+                    MaterialPageRoute<Map<String, String>>(
+                      builder: (BuildContext context) => profileScreen,
+                    ),
+                  );
+                },
+                child: const Text('Go to Profile'),
+              ),
+            );
+          },
+        ),
       );
+
+      await tester.pumpWidget(app);
+      await tester.tap(find.text('Go to Profile'));
       await tester.pumpAndSettle();
 
-      // Tap save
-      await tester.tap(find.byKey(const ValueKey('profile_save')));
+      final Finder nameFieldFinder =
+          find.widgetWithText(TextField, 'Your Name');
+      final Finder locationFieldFinder =
+          find.widgetWithText(TextField, 'Preferred Location');
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.enterText(nameFieldFinder, '  John Doe  ');
+      await tester.enterText(locationFieldFinder, '  London  ');
+      await tester.tap(saveButtonFinder);
       await tester.pumpAndSettle();
 
-      // Should show validation error text and not show SnackBar
-      expect(find.text('Enter a valid email'), findsOneWidget);
-      expect(find.byType(SnackBar), findsNothing);
+      expect(result, isNotNull);
+      expect(result!['name'], equals('John Doe'));
+      expect(result!['location'], equals('London'));
+    });
+
+    testWidgets('returns profile data when both fields are filled',
+        (WidgetTester tester) async {
+      Map<String, String>? result;
+      const ProfileScreen profileScreen = ProfileScreen();
+      final MaterialApp app = MaterialApp(
+        home: Builder(
+          builder: (BuildContext context) {
+            return Scaffold(
+              body: ElevatedButton(
+                onPressed: () async {
+                  result = await Navigator.push<Map<String, String>>(
+                    context,
+                    MaterialPageRoute<Map<String, String>>(
+                      builder: (BuildContext context) => profileScreen,
+                    ),
+                  );
+                },
+                child: const Text('Go to Profile'),
+              ),
+            );
+          },
+        ),
+      );
+
+      await tester.pumpWidget(app);
+      await tester.tap(find.text('Go to Profile'));
+      await tester.pumpAndSettle();
+
+      final Finder nameFieldFinder =
+          find.widgetWithText(TextField, 'Your Name');
+      final Finder locationFieldFinder =
+          find.widgetWithText(TextField, 'Preferred Location');
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.enterText(nameFieldFinder, 'Jane Smith');
+      await tester.enterText(locationFieldFinder, 'Manchester');
+      await tester.tap(saveButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      expect(result!['name'], equals('Jane Smith'));
+      expect(result!['location'], equals('Manchester'));
+    });
+
+    testWidgets('text fields have proper decoration',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder nameFieldFinder =
+          find.widgetWithText(TextField, 'Your Name');
+      final Finder locationFieldFinder =
+          find.widgetWithText(TextField, 'Preferred Location');
+
+      final TextField nameField = tester.widget<TextField>(nameFieldFinder);
+      final TextField locationField =
+          tester.widget<TextField>(locationFieldFinder);
+
+      expect(nameField.decoration?.labelText, equals('Your Name'));
+      expect(nameField.decoration?.border, isA<OutlineInputBorder>());
+      expect(locationField.decoration?.labelText, equals('Preferred Location'));
+      expect(locationField.decoration?.border, isA<OutlineInputBorder>());
+    });
+
+    testWidgets('save button is always enabled', (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder saveButtonFinder = find.byType(ElevatedButton);
+      final ElevatedButton saveButton =
+          tester.widget<ElevatedButton>(saveButtonFinder);
+
+      expect(saveButton.onPressed, isNotNull);
+    });
+
+    testWidgets('handles special characters in input fields',
+        (WidgetTester tester) async {
+      Map<String, String>? result;
+      const ProfileScreen profileScreen = ProfileScreen();
+      final MaterialApp app = MaterialApp(
+        home: Builder(
+          builder: (BuildContext context) {
+            return Scaffold(
+              body: ElevatedButton(
+                onPressed: () async {
+                  result = await Navigator.push<Map<String, String>>(
+                    context,
+                    MaterialPageRoute<Map<String, String>>(
+                      builder: (BuildContext context) => profileScreen,
+                    ),
+                  );
+                },
+                child: const Text('Go to Profile'),
+              ),
+            );
+          },
+        ),
+      );
+
+      await tester.pumpWidget(app);
+      await tester.tap(find.text('Go to Profile'));
+      await tester.pumpAndSettle();
+
+      final Finder nameFieldFinder =
+          find.widgetWithText(TextField, 'Your Name');
+      final Finder locationFieldFinder =
+          find.widgetWithText(TextField, 'Preferred Location');
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.enterText(nameFieldFinder, 'José María');
+      await tester.enterText(locationFieldFinder, 'São Paulo');
+      await tester.tap(saveButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      expect(result!['name'], equals('José María'));
+      expect(result!['location'], equals('São Paulo'));
+    });
+
+    testWidgets('column has correct cross axis alignment',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder columnFinder = find.byType(Column);
+      final Column column = tester.widget<Column>(columnFinder);
+
+      expect(column.crossAxisAlignment, equals(CrossAxisAlignment.stretch));
+    });
+
+    testWidgets('snackbar has correct duration', (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.tap(saveButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please fill in all fields'), findsOneWidget);
+
+      final Finder snackBarFinder = find.byType(SnackBar);
+      final SnackBar snackBar = tester.widget<SnackBar>(snackBarFinder);
+      expect(snackBar.duration, equals(const Duration(seconds: 2)));
+    });
+
+    testWidgets('handles empty strings after trimming',
+        (WidgetTester tester) async {
+      const ProfileScreen profileScreen = ProfileScreen();
+      const MaterialApp app = MaterialApp(home: profileScreen);
+
+      await tester.pumpWidget(app);
+
+      final Finder nameFieldFinder =
+          find.widgetWithText(TextField, 'Your Name');
+      final Finder locationFieldFinder =
+          find.widgetWithText(TextField, 'Preferred Location');
+      final Finder saveButtonFinder = find.text('Save Profile');
+
+      await tester.enterText(nameFieldFinder, '   ');
+      await tester.enterText(locationFieldFinder, '   ');
+      await tester.tap(saveButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please fill in all fields'), findsOneWidget);
     });
   });
 }

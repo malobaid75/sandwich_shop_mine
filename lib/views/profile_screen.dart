@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sandwich_shop/views/app_scaffold.dart';
+import 'package:sandwich_shop/views/app_styles.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -9,74 +9,81 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameCtrl = TextEditingController();
-  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _emailCtrl.dispose();
+    _nameController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
-  void _save() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final String name = _nameCtrl.text.trim();
-      final String email = _emailCtrl.text.trim();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved profile: $name — $email')),
-      );
+  void _saveProfile() {
+    final String name = _nameController.text.trim();
+    final String location = _locationController.text.trim();
+
+    final bool nameIsNotEmpty = name.isNotEmpty;
+    final bool locationIsNotEmpty = location.isNotEmpty;
+    final bool bothFieldsFilled = nameIsNotEmpty && locationIsNotEmpty;
+
+    if (bothFieldsFilled) {
+      _returnProfileData(name, location);
+    } else {
+      _showValidationError();
     }
   }
 
-  String? _validateName(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Enter a name';
-    return null;
+  void _returnProfileData(String name, String location) {
+    final Map<String, String> profileData = {
+      'name': name,
+      'location': location,
+    };
+    Navigator.pop(context, profileData);
   }
 
-  String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Enter an email';
-    final email = v.trim();
-    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!regex.hasMatch(email)) return 'Enter a valid email';
-    return null;
+  void _showValidationError() {
+    const SnackBar validationSnackBar = SnackBar(
+      content: Text('Please fill in all fields'),
+      duration: Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(validationSnackBar);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: 'Profile / Sign in',
-      child: Padding(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile', style: heading1),
+      ),
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                key: const ValueKey('profile_name'),
-                controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Full name'),
-                validator: _validateName,
-                textInputAction: TextInputAction.next,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Enter your details:', style: heading2),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Your Name',
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                key: const ValueKey('profile_email'),
-                controller: _emailCtrl,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-                validator: _validateEmail,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _locationController,
+              decoration: const InputDecoration(
+                labelText: 'Preferred Location',
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                key: const ValueKey('profile_save'),
-                onPressed: _save,
-                child: const Text('Save'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveProfile,
+              child: const Text('Save Profile'),
+            ),
+          ],
         ),
       ),
     );
