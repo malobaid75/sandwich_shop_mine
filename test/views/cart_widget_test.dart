@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sandwich_shop/models/cart.dart';
 import 'package:sandwich_shop/models/sandwich.dart';
+import 'package:provider/provider.dart';
 import 'package:sandwich_shop/views/cart_screen.dart';
 
 void main() {
@@ -17,7 +18,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: CartScreen(cart: cart),
+          home: ChangeNotifierProvider.value(
+            value: cart,
+            child: const CartScreen(),
+          ),
         ),
       );
 
@@ -46,7 +50,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: CartScreen(cart: cart),
+          home: ChangeNotifierProvider.value(
+            value: cart,
+            child: const CartScreen(),
+          ),
         ),
       );
 
